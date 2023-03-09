@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "concurrently -k -n \"Typescript,Node\" -p \"[{name}]\" -c \"blue,green\" \"tsc --watch\" \"nodemon dist/index.js\""
+    "dev": "concurrently -k -n \"Typescript,Node\" -p \"[{name}]\" -c \"blue,green\" \"tsc --watch\" \"nodemon --exec node --inspect dist/index.js\""
   },
   "dependencies": {
     "@koa/cors": "^4.0.0",
@@ -18,7 +18,9 @@
     "mailparser": "^3.6.4"
   },
   "devDependencies": {
+    "@types/imap": "^0.8.35",
     "@types/jest": "^29.4.0",
+    "@types/mailparser": "^3.4.0",
     "@types/node": "^18.14.6",
     "concurrently": "^7.6.0",
     "nodemon": "^2.0.21",
