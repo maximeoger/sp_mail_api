@@ -4,7 +4,9 @@
     "esModuleInterop": true,
     "outDir": "dist",
     "target": "es6",
-    "strict": true
+    "strict": true,
+    "sourceMap": true,
+    "sourceRoot": "src"
   },
   "include": [
     "src/**/*"

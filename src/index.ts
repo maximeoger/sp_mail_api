@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import Server from './server';
-import imapReader, { getMessages, getImapFetch, getMailbox } from "./imap";
-
+import imapReader, {getMessages, getImapFetch, getMailbox, getMessageBody, parseMessage } from "./imap";
+import util from "util";
 
 dotenv.config()
 
@@ -17,14 +17,16 @@ const fetchMail = async function () {
   try {
     const imap = imapReader(imapConfig)
     const mailBox = await getMailbox(imap)
-    const imapFetch = await getImapFetch(imap, mailBox)
-    getMessages(imapFetch)
+
+    const messageEventEmitters = await getMessages(imap)
+
+    const messageStream = await getMessageBody(messageEventEmitters[0])
+    console.log(messageStream)
 
   } catch(err) {
     console.log(err)
   }
 }
-
 
 fetchMail();
 
