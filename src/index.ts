@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import Server from './server';
-import imapReader, { getMessages, getMailbox } from "./imap";
+import {games_workshop, Supplier} from "./utils/suppliers";
+import imapReader, {getMailbox, getSupplierMessages} from "./imap";
 import util from "util";
 
 dotenv.config()
@@ -13,19 +14,18 @@ const imapConfig = {
   tls: true
 }
 
-const fetchMail = async function () {
+const fetchMail = async function (supplier: Supplier) {
   try {
     const imap = imapReader(imapConfig)
     const mailBox = await getMailbox(imap)
-    const messages = await getMessages(imap)
-
+    const messages = await getSupplierMessages(imap, supplier)
 
   } catch(err) {
     console.log(err)
   }
 }
 
-fetchMail();
+fetchMail(games_workshop);
 
 const app = new Server(3002)
 
