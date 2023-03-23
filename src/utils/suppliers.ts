@@ -1,9 +1,10 @@
+import dayjs, {Dayjs} from "dayjs";
 import { getLastWeeksDate } from "./utils";
 
 export type Supplier = {
 	name: String
 	sender_email: String,
-	last_fetch_messages: Date,
+	last_fetch_messages: String,
 	keywords: {
 		excluded: Array<String>,
 		included: Array<String>
@@ -13,7 +14,7 @@ export type Supplier = {
 export const games_workshop : Supplier = {
 	name: 'Games Workshop',
 	sender_email: 'info@info.games-workshop.com',
-	last_fetch_messages: getLastWeeksDate(), // todo: à remplacer par une donnée en dur à la fin du run
+	last_fetch_messages: dayjs().subtract(1, 'week').format('MMMM DD, YYYY'), // todo: à remplacer par une donnée en dur à la fin du run
 	keywords: {
 		excluded: [
 			'Mise à jour',
