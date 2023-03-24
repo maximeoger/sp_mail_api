@@ -1,12 +1,10 @@
-import { inspect } from 'util';
-import fs from 'node:fs/promises';
 import Connection from "imap";
 import dayjs from "dayjs";
 import { JSDOM } from "jsdom";
 import Imap, {Box, Config, ImapFetch, ImapMessage} from 'imap';
-import { simpleParser, ParsedMail } from "mailparser";
+import { simpleParser } from "mailparser";
 import {Supplier} from "../utils/suppliers";
-import ReadableString from '../utils/ReadableString'
+import writeToFile from "../utils/writeToFile";
 
 const imapReader = (config: Config) : Connection => {
   const imap = new Imap(config)
@@ -46,22 +44,7 @@ export const getSupplierMessages = (connection: Imap, supplier: Supplier) : void
           if(error) console.log('Read mail executor error ....', error)
 
           if(mail.text) {
-            const fileHandle = await fs.open(__dirname + '/output.html', 'w')
-            const writable = fileHandle.createWriteStream()
-            const readable = new ReadableString(mail.text, { highWaterMark: 8 * 1024 })
-            readable.setEncoding('utf-8')
-
-            readable.on('data', (chunk) => {
-                if(!writable.write(chunk)) {
-                readable.pause()
-              }
-            })
-
-            writable.on('drain', () => {
-              readable.resume()
-            })
-
-            readable.on('end', () => console.log('finished Read'))
+            await writeToFile(mail.text, __dirname + '/output.html')
           }
         })
       })
