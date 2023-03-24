@@ -1,6 +1,6 @@
-import * as Koa from 'koa';
+import Koa from 'koa';
 
-export default class Index {
+export default class Server {
 
   readonly port: number;
 
