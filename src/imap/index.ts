@@ -35,11 +35,6 @@ export const getSupplierMessages = (connection: Imap, supplier: Supplier) : void
   ],  (err, results) => {
     if(err) throw err
 
-    console.log('SEARCH RESULTS', {
-      from: supplier.sender_email,
-      since: supplier.last_fetch_messages,
-      results
-    })
     const fetch : ImapFetch = connection.seq.fetch(results, { bodies: ['HEADER.FIELDS (SUBJECT)','TEXT'], struct: true });
 
     fetch.on('message', (message, seqno) => {
@@ -50,34 +45,20 @@ export const getSupplierMessages = (connection: Imap, supplier: Supplier) : void
 
           if(error) console.log('Read mail executor error ....', error)
 
-          if(mail.textAsHtml) {
-            console.log('len', {
-              firstChar: mail.textAsHtml[0],
-              textHasHtml: mail.textAsHtml.length,
-              text: mail.text?.length
-            })
-            const bodyHTML = new JSDOM(mail.textAsHtml)
+          if(mail.text) {
             const fileHandle = await fs.open(__dirname + '/output.html', 'w')
-            console.log(__dirname + '/output.html')
-            const writable = fileHandle.createWriteStream({})
-            const readable = new ReadableString(mail.textAsHtml)
+            const writable = fileHandle.createWriteStream()
+            const readable = new ReadableString(mail.text, { highWaterMark: 8 * 1024 })
+            readable.setEncoding('utf-8')
 
-            let i = 0
-            readable.on('data', chunk => {
-              console.log({i,
-                chunk,
-                chuncksize: chunk.toString().length
-              })
-              readable.pause()
-              if(null !== writable.write(chunk)) {
-
+            readable.on('data', (chunk) => {
+                if(!writable.write(chunk)) {
                 readable.pause()
               }
             })
 
             writable.on('drain', () => {
-              console.log('DRAIN')
-              //readable.resume()
+              readable.resume()
             })
 
             readable.on('end', () => console.log('finished Read'))
