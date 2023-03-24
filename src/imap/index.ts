@@ -45,6 +45,7 @@ export const getSupplierMessages = (connection: Imap, supplier: Supplier) : void
 
           if(mail.text) {
             await writeToFile(mail.text, __dirname + '/output.html')
+
           }
         })
       })
