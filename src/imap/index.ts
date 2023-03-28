@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { JSDOM } from "jsdom";
 import Imap, {Box, Config, ImapFetch, ImapMessage} from 'imap';
 import { simpleParser } from "mailparser";
-import {Supplier} from "../utils/suppliers";
+import fs from 'node:fs/promises';
 import writeToFile from "../utils/writeToFile";
 
 const imapReader = (config: Config) : Connection => {
@@ -23,12 +23,10 @@ export const getMailbox = (connection: Imap): Promise<Box> => {
   })
 }
 
-let today : string = dayjs().format('MMMM DD, YYYY')
-
-export const getSupplierMessages = (connection: Imap, supplier: Supplier) : void => {
+export const getSupplierMessages = (connection: Imap, sender_email: string, last_fetch_messages: string, name: string) : Promise<[]> => {
   connection.seq.search([
-    ['FROM', supplier.sender_email],
-    ['SENTSINCE', supplier.last_fetch_messages],
+    ['FROM', sender_email],
+    ['SENTSINCE', last_fetch_messages],
     //['ON', today]
   ],  (err, results) => {
     if(err) throw err
@@ -45,6 +43,34 @@ export const getSupplierMessages = (connection: Imap, supplier: Supplier) : void
 
           if(mail.text) {
             await writeToFile(mail.text, __dirname + '/output.html')
+            let fileHandle = await fs.open(__dirname + '/output.html', 'r')
+            let readable = fileHandle.createReadStream()
+            let html = ''
+
+            readable.on('data', (buffer) => {
+              let str = buffer.toString('utf8')
+              html += str
+            })
+
+            readable.on('end', () => {
+              let { document } = (new JSDOM(html, {contentType: "text/html"})).window
+              let aTags = document.getElementsByTagName('a')
+              let searchText = "Télécharger"
+              let found
+
+              for(var i=0; i<aTags.length; i++){
+                if(aTags[i].textContent === searchText) {
+                  found = aTags[i]
+                  break
+                }
+              }
+
+              if(found) {
+                let downloadLink = found.getAttribute('href')
+                console.log(downloadLink)
+              }
+
+            })
 
           }
         })
@@ -59,8 +85,10 @@ export const getSupplierMessages = (connection: Imap, supplier: Supplier) : void
 
     fetch.once('error', (error) => console.log(`Fetch error : ${error}`))
 
-    fetch.once('end', () => console.log(`Done fetching all messages from ${supplier.name} since ${supplier.last_fetch_messages.toString()}`))
+    fetch.once('end', () => console.log(`Done fetching all messages from ${name} since ${last_fetch_messages.toString()}`))
   })
+
+  return new Promise((resolve) => resolve([]))
 }
 
 export default imapReader

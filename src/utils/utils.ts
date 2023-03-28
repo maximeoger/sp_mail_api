@@ -1,4 +1,5 @@
-export function getLastWeeksDate(): Date {
-	const now = new Date();
-	return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+import http from 'http'
+
+export function downloadFile (url, dest, ) {
+
 }

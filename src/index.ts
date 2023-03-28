@@ -1,31 +1,30 @@
-import dotenv from 'dotenv';
-import Server from './server';
-import {games_workshop, Supplier} from "./utils/suppliers";
-import imapReader, {getMailbox, getSupplierMessages} from "./imap";
-import util from "util";
+import dotenv from 'dotenv'
+import dayjs, { Dayjs } from 'dayjs'
+import Server from './server'
+import GW from './domains/GamesWorkshop/GamesWorkshop'
+import imapReader, { getMailbox, getSupplierMessages } from './imap'
 
 dotenv.config()
 
-const imapConfig = {
-  user: process.env.MAILBOX_USER || "",
-  password: process.env.MAILBOX_PWD || "",
-  host: process.env.IMAP_HOST || "",
-  port: Number(process.env.IMAP_PORT),
-  tls: true
-}
+const fetchMail = async function () {
 
-const fetchMail = async function (supplier: Supplier) {
+  const gamesWorkshop = new GW({
+    name: 'Games Workshop',
+    email: 'info@info.games-workshop.com',
+    last_run: dayjs().subtract(1, 'week').format('MMMM DD, YYYY'),
+  })
+
+  gamesWorkshop.init()
   try {
-    const imap = imapReader(imapConfig)
-    const mailBox = await getMailbox(imap)
-    const messages = await getSupplierMessages(imap, supplier)
+    const mailBox = await getMailbox(gamesWorkshop.imapConnection!)
+    const messages = await gamesWorkshop.getProductsFromNewsLetter()
 
   } catch(err) {
     console.log(err)
   }
 }
 
-fetchMail(games_workshop);
+fetchMail()
 
 const app = new Server(3002)
 

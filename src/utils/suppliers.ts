@@ -1,22 +1,31 @@
-import dayjs, {Dayjs} from "dayjs";
-import { getLastWeeksDate } from "./utils";
+import Imap from 'imap'
+import imapReader  from '../imap'
 
-export type Supplier = {
-	name: String
-	sender_email: String,
-	last_fetch_messages: String,
-	keywords: {
-		excluded: Array<String>,
-		included: Array<String>
-	}
+export interface SupplierData {
+	name : string
+	email: string
+	last_run: string
+	excluded_keywords?: Array<string>
+	included_keywords?: Array<string>
 }
 
-export const games_workshop : Supplier = {
-	name: 'Games Workshop',
-	sender_email: 'info@info.games-workshop.com',
-	last_fetch_messages: dayjs().subtract(1, 'week').format('MMMM DD, YYYY'), // todo: à remplacer par une donnée en dur à la fin du run
-	keywords: {
-		excluded: [
+export default abstract class Supplier {
+	name: string
+	email: string
+	last_run: string
+	excluded_keywords?: Array<string>
+	included_keywords?: Array<string>
+	imapConnection?: Imap
+
+	protected constructor(data: SupplierData) {
+		this.name = data.name
+		this.email = data.email
+		this.last_run = data.last_run
+	}
+
+	init(): void {
+		// TODO: Faire venir ces données d'un backend externe
+		this.excluded_keywords = [
 			'Mise à jour',
 			'service commercial',
 			'Informations relatives',
@@ -26,9 +35,9 @@ export const games_workshop : Supplier = {
 			'votre commande',
 			'jeu organisé',
 			'rappel du produit',
-			'produit',
-		],
-		included: [
+			'produit'
+		]
+		this.included_keywords = [
 			'warhammer',
 			'warhammer 40.000',
 			'40,000',
@@ -44,6 +53,18 @@ export const games_workshop : Supplier = {
 			'hérésie',
 			'horus',
 			'blood bowl'
-		],
+		]
+		this.setImapConnection()
+	}
+
+	setImapConnection() : void {
+		this.imapConnection = imapReader({
+			user: process.env.MAILBOX_USER || "",
+			password: process.env.MAILBOX_PWD || "",
+			host: process.env.IMAP_HOST || "",
+			port: Number(process.env.IMAP_PORT),
+			tls: true
+		})
 	}
 }
+
