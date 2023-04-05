@@ -5,6 +5,7 @@ export interface SupplierData {
 	name : string
 	email: string
 	last_run: string
+	dest_file_name: string
 	excluded_keywords?: Array<string>
 	included_keywords?: Array<string>
 }
@@ -13,6 +14,7 @@ export default abstract class Supplier {
 	name: string
 	email: string
 	last_run: string
+	dest_file_name: string
 	excluded_keywords?: Array<string>
 	included_keywords?: Array<string>
 	imapConnection?: Imap
@@ -21,6 +23,7 @@ export default abstract class Supplier {
 		this.name = data.name
 		this.email = data.email
 		this.last_run = data.last_run
+		this.dest_file_name = data.dest_file_name
 	}
 
 	init(): void {

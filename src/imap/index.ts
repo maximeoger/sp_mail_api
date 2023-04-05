@@ -5,6 +5,7 @@ import Imap, {Box, Config, ImapFetch, ImapMessage} from 'imap';
 import { simpleParser } from "mailparser";
 import fs from 'node:fs/promises';
 import writeToFile from "../utils/writeToFile";
+import { downloadFileAndUnzip } from "../utils/utils";
 
 const imapReader = (config: Config) : Connection => {
   const imap = new Imap(config)
@@ -23,7 +24,7 @@ export const getMailbox = (connection: Imap): Promise<Box> => {
   })
 }
 
-export const getSupplierMessages = (connection: Imap, sender_email: string, last_fetch_messages: string, name: string) : Promise<[]> => {
+export const getSupplierMessages = (connection: Imap, sender_email: string, last_fetch_messages: string, name: string, destFileName: string) : Promise<[]> => {
   connection.seq.search([
     ['FROM', sender_email],
     ['SENTSINCE', last_fetch_messages],
@@ -52,7 +53,7 @@ export const getSupplierMessages = (connection: Imap, sender_email: string, last
               html += str
             })
 
-            readable.on('end', () => {
+            readable.on('end', async () => {
               let { document } = (new JSDOM(html, {contentType: "text/html"})).window
               let aTags = document.getElementsByTagName('a')
               let searchText = "Télécharger"
@@ -67,7 +68,7 @@ export const getSupplierMessages = (connection: Imap, sender_email: string, last
 
               if(found) {
                 let downloadLink = found.getAttribute('href')
-                console.log(downloadLink)
+                await downloadFileAndUnzip(downloadLink!, destFileName)
               }
 
             })

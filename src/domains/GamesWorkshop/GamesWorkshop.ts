@@ -7,6 +7,6 @@ export default class GW extends Supplier {
   }
 
   async getProductsFromNewsLetter () : Promise<any> {
-    let products: any[] = await getSupplierMessages(this.imapConnection!, this.email, this.last_run, this.name)
+    let products: any[] = await getSupplierMessages(this.imapConnection!, this.email, this.last_run, this.name, this.dest_file_name)
   }
 }

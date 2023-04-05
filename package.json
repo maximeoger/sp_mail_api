@@ -11,6 +11,7 @@
   "dependencies": {
     "@koa/cors": "^4.0.0",
     "@types/koa": "^2.13.5",
+    "adm-zip": "^0.5.10",
     "dayjs": "^1.11.7",
     "dotenv": "^16.0.3",
     "imap": "^0.8.19",
@@ -19,14 +20,17 @@
     "koa": "^2.14.1",
     "koa-logger": "^3.2.1",
     "koa-router": "^12.0.0",
-    "mailparser": "^3.6.4"
+    "mailparser": "^3.6.4",
+    "superagent": "^8.0.9"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.0",
     "@types/imap": "^0.8.35",
     "@types/jest": "^29.5.0",
     "@types/jsdom": "^21.1.0",
     "@types/mailparser": "^3.4.0",
     "@types/node": "^18.15.6",
+    "@types/superagent": "^4.1.16",
     "concurrently": "^7.6.0",
     "nodemon": "^2.0.21",
     "ts-jest": "^29.0.5",
