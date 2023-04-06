@@ -1,8 +1,8 @@
 import dotenv from 'dotenv'
-import dayjs, { Dayjs } from 'dayjs'
+import dayjs from 'dayjs'
 import Server from './server'
 import GW from './domains/GamesWorkshop/GamesWorkshop'
-import imapReader, { getMailbox, getSupplierMessages } from './imap'
+import { getMailbox } from './imap'
 
 dotenv.config()
 
@@ -15,11 +15,10 @@ const fetchMail = async function () {
     last_run: dayjs().subtract(1, 'week').format('MMMM DD, YYYY'),
   })
 
-  gamesWorkshop.init()
-  try {
-    const mailBox = await getMailbox(gamesWorkshop.imapConnection!)
-    const messages = await gamesWorkshop.getProductsFromNewsLetter()
+  await gamesWorkshop.init()
 
+  try {
+    await gamesWorkshop.run()
   } catch(err) {
     console.log(err)
   }
