@@ -9,7 +9,6 @@ export default class ReadableString extends Readable {
   }
 
   _read() {
-    console.log('_READ', this.str.length)
     this.push(Buffer.from(this.str))
     this.push(null)
   }
