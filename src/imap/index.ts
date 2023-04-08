@@ -24,22 +24,22 @@ export const getMailbox = (connection: Imap): Promise<Box> => {
   })
 }
 
-export const getSupplierMessagesFromImap = (connection: Imap, sender_email: string, last_fetch_messages: string, name: string) : Promise<Source> => {
+export const getSupplierMessagesFromImap = (connection: Imap, senderEmail: string, lastRunDate: string, name: string) : Promise<Array<Source>> => {
   return new Promise((fulfill, reject) => {
     connection.seq.search([
-      ['FROM', sender_email],
-      ['SENTSINCE', last_fetch_messages],
-      //['ON', today]
+      ['FROM', senderEmail],
+      ['SENTSINCE', lastRunDate],
     ],  (err, results) => {
       if(err) throw err
-
+      let sources: any = []
       const fetch : ImapFetch = connection.seq.fetch(results, { bodies: ['HEADER.FIELDS (SUBJECT)','TEXT'], struct: true });
 
       fetch.on('message', (message, seqno) => {
         const prefix = '(#' + seqno + ') ';
+
         message.on('body', (stream, info) => {
           if(info.which === 'TEXT') {
-            fulfill(stream)
+            sources.push(stream)
           }
         })
         message.once('end', () => console.log(`${prefix} Finished`))
@@ -50,7 +50,10 @@ export const getSupplierMessagesFromImap = (connection: Imap, sender_email: stri
         reject(error)
       })
 
-      fetch.once('end', () => console.log(`Done fetching all messages from ${name} since ${last_fetch_messages.toString()}`))
+      fetch.once('end', () => {
+        console.log(`Done fetching all messages from ${name} since ${lastRunDate}`)
+        return sources
+      })
     })
   })
 }

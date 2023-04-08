@@ -38,18 +38,23 @@ export default class GW extends Supplier {
   }
 
   private async getProductsFromNewsLetter() : Promise<any> {
-    let messageStream = await getSupplierMessagesFromImap( // TODO: déplacer ça dans une classe dédiée ?
+    let messagesSources = await getSupplierMessagesFromImap( // TODO: déplacer ça dans une classe dédiée ?
       this.imapConnection!,
       this.email,
-      this.last_run,
+      this.lastRunDate!,
       this.name,
     )
 
-    await writeEmailFile(messageStream, this.currentRunDirectory!) // TODO: déplacer ça dans une classe dédiée ?
+    for await (const source of messagesSources) {
+      await writeEmailFile(source, this.currentRunDirectory!) // TODO: déplacer ça dans une classe dédiée ?
+    }
+
   }
 
   async run() : Promise<void> {
+    await this.getLastRunDateFromFile()
     this.setCurrentRunDate()
+    await this.saveRunDate()
 
     try {
       await this.createDestFile()

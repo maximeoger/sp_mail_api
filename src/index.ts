@@ -12,7 +12,6 @@ const fetchMail = async function () {
     name: 'Games Workshop',
     dest_file_name: 'games_workshop',
     email: 'info@info.games-workshop.com',
-    last_run: dayjs().subtract(1, 'week').format('MMMM DD, YYYY'),
   })
 
   await gamesWorkshop.init()

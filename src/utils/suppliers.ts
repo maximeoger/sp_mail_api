@@ -6,7 +6,6 @@ import dayjs from "dayjs";
 export interface SupplierData {
 	name : string
 	email: string
-	last_run: string
 	dest_file_name: string
 	excluded_keywords?: Array<string>
 	included_keywords?: Array<string>
@@ -15,7 +14,7 @@ export interface SupplierData {
 export default abstract class Supplier {
 	name: string
 	email: string
-	last_run: string
+	lastRunDate?: string
 	dest_file_name: string
 	excluded_keywords?: Array<string>
 	included_keywords?: Array<string>
@@ -27,12 +26,20 @@ export default abstract class Supplier {
 	protected constructor(data: SupplierData) {
 		this.name = data.name
 		this.email = data.email
-		this.last_run = data.last_run
 		this.dest_file_name = data.dest_file_name
+	}
+
+	async getLastRunDateFromFile(): Promise<void> {
+		let lastRunDate = await fs.readFile(`${process.cwd()}/last_runs/${this.dest_file_name}.txt`, { encoding: 'utf8' })
+		this.lastRunDate = lastRunDate
 	}
 
 	setCurrentRunDate(): void {
 		this.currentRunDate = dayjs().format('DD-MM-YYYY')
+	}
+
+	async saveRunDate(): Promise<void> {
+		await fs.writeFile(`${process.cwd()}/last_runs/${this.dest_file_name}.txt`, this.currentRunDate!)
 	}
 
 	// Lancé à chaque run : créé un dossier à la date du run au format DD-MM-YYYY
