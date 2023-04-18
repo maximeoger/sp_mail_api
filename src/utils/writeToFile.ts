@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import ReadableString from "./ReadableString";
+import ReadableString from "./streams/ReadableString";
 
 export default async function writeToFile(data: string, filePath: string) : Promise<void> {
   const fileHandle = await fs.open(filePath, 'w')

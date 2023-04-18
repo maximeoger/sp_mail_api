@@ -1,5 +1,5 @@
 import Supplier, { SupplierData } from '../../utils/suppliers'
-import {getMailbox, getSupplierMessagesFromImap, writeEmailFile} from '../../imap'
+import { getMailbox, getSupplierMessagesFromImap, writeEmailFile } from '../../imap'
 
 export default class GW extends Supplier {
 
@@ -38,23 +38,25 @@ export default class GW extends Supplier {
   }
 
   private async getProductsFromNewsLetter() : Promise<any> {
-    let messagesSources = await getSupplierMessagesFromImap( // TODO: déplacer ça dans une classe dédiée ?
+    await getSupplierMessagesFromImap( // TODO: déplacer ça dans une classe dédiée ?
       this.imapConnection!,
       this.email,
-      this.lastRunDate!,
+      this.lastRunDate,
       this.name,
+      this.currentRunDirectory!
     )
-
+    /*
     for await (const source of messagesSources) {
-      await writeEmailFile(source, this.currentRunDirectory!) // TODO: déplacer ça dans une classe dédiée ?
+      const src = source
+      await writeEmailFile(src, this.currentRunDirectory!) // TODO: déplacer ça dans une classe dédiée ?
     }
-
+    */
   }
 
   async run() : Promise<void> {
     await this.getLastRunDateFromFile()
     this.setCurrentRunDate()
-    await this.saveRunDate()
+    //await this.saveRunDate()
 
     try {
       await this.createDestFile()

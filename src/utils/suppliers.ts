@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import Imap from 'imap'
 import imapReader  from '../imap'
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 
 export interface SupplierData {
 	name : string
@@ -14,32 +14,43 @@ export interface SupplierData {
 export default abstract class Supplier {
 	name: string
 	email: string
-	lastRunDate?: string
+	lastRunDate: Dayjs
 	dest_file_name: string
 	excluded_keywords?: Array<string>
 	included_keywords?: Array<string>
 	imapConnection?: Imap
 	downloadsDirectory: string = `${process.cwd()}/downloads`
 	currentRunDirectory?: string
-	currentRunDate?: string
+	currentRunDate?: Dayjs
 
 	protected constructor(data: SupplierData) {
 		this.name = data.name
 		this.email = data.email
 		this.dest_file_name = data.dest_file_name
+		this.lastRunDate = dayjs()
+	}
+
+	getCurrentDateFormatted(format: string) : string {
+		if(!this.currentRunDate) throw Error(`There is no current date for supplier ${this.name}`)
+		return this.currentRunDate.format(format)
+	}
+
+	getLastRunDateFormatted(format: string) : string {
+		if(!this.lastRunDate) throw Error(`There is no last run date for supplier ${this.name}`)
+		return this.lastRunDate.format(format)
 	}
 
 	async getLastRunDateFromFile(): Promise<void> {
 		let lastRunDate = await fs.readFile(`${process.cwd()}/last_runs/${this.dest_file_name}.txt`, { encoding: 'utf8' })
-		this.lastRunDate = lastRunDate
+		this.lastRunDate = dayjs(lastRunDate)
 	}
 
 	setCurrentRunDate(): void {
-		this.currentRunDate = dayjs().format('DD-MM-YYYY')
+		this.currentRunDate = dayjs()
 	}
 
 	async saveRunDate(): Promise<void> {
-		await fs.writeFile(`${process.cwd()}/last_runs/${this.dest_file_name}.txt`, this.currentRunDate!)
+		await fs.writeFile(`${process.cwd()}/last_runs/${this.dest_file_name}.txt`, this.getCurrentDateFormatted('YYYY-MM-DD'))
 	}
 
 	// Lancé à chaque run : créé un dossier à la date du run au format DD-MM-YYYY
@@ -50,7 +61,7 @@ export default abstract class Supplier {
 			throw Error('Missing download directory, destination file name of current run date.')
 		}
 
-		let dirPath = `${this.downloadsDirectory}/${this.dest_file_name}/${this.currentRunDate}`
+		let dirPath = `${this.downloadsDirectory}/${this.dest_file_name}/${this.getCurrentDateFormatted('YYYY-MM-DD')}`
 
 		await fs.mkdir(dirPath, { recursive: true })
 

@@ -1,11 +1,13 @@
-import Connection from "imap";
-import dayjs from "dayjs";
-import { JSDOM } from "jsdom";
-import Imap, {Box, Config, ImapFetch, ImapMessage} from 'imap';
-import { simpleParser, Source } from "mailparser";
-import fs from 'node:fs/promises';
-import writeToFile from "../utils/writeToFile";
-import { downloadFileAndUnzip } from "../utils/utils";
+import Connection from "imap"
+import { Dayjs } from "dayjs"
+import { JSDOM } from "jsdom"
+import Imap, {Box, Config, ImapFetch, ImapMessage} from 'imap'
+import { simpleParser, Source } from "mailparser"
+import fs from 'node:fs/promises'
+import {Buffer} from "buffer"
+import writeToFile from "../utils/writeToFile"
+import { downloadFileAndUnzip } from "../utils/utils"
+import { streamToString } from "../utils/streams/streamToString"
 
 const imapReader = (config: Config) : Connection => {
   const imap = new Imap(config)
@@ -21,29 +23,47 @@ export const getMailbox = (connection: Imap): Promise<Box> => {
         fulfill(mailbox)
       })
     })
+    connection.on('error', (error : Error) => reject(error))
   })
 }
 
-export const getSupplierMessagesFromImap = (connection: Imap, senderEmail: string, lastRunDate: string, name: string) : Promise<Array<Source>> => {
+export const getSupplierMessagesFromImap = (connection: Imap, senderEmail: string, lastRunDate: Dayjs, name: string, currentRunDirectory: string) : Promise<void> => {
+
+  let searchDate = lastRunDate.format('MMM D, YYYY')
+
+  let headerBody = 'HEADER.FIELDS (SUBJECT)'
+  let textBody = 'TEXT'
+
   return new Promise((fulfill, reject) => {
     connection.seq.search([
       ['FROM', senderEmail],
-      ['SENTSINCE', lastRunDate],
+      ['SINCE', searchDate],
     ],  (err, results) => {
+
       if(err) throw err
-      let sources: any = []
-      const fetch : ImapFetch = connection.seq.fetch(results, { bodies: ['HEADER.FIELDS (SUBJECT)','TEXT'], struct: true });
+
+      const fetch : ImapFetch = connection.seq.fetch(results, { bodies: [headerBody, textBody], struct: true })
 
       fetch.on('message', (message, seqno) => {
-        const prefix = '(#' + seqno + ') ';
+        const prefix = '(#' + seqno + ') '
 
-        message.on('body', (stream, info) => {
-          if(info.which === 'TEXT') {
-            sources.push(stream)
+        message.on('body', async (stream, info) => {
+          if(info.which === headerBody) {
+            let subject = await streamToString(stream)
+          }
+
+          if(info.which === textBody) {
+            await writeEmailFile(stream, currentRunDirectory)
           }
         })
+
+        message.on('attributes', (attrs: any) => {
+          console.log(`${prefix} Date : ${attrs.date}`)
+        })
+
         message.once('end', () => console.log(`${prefix} Finished`))
       })
+
 
       fetch.once('error', (error) => {
         console.log(`Fetch error : ${error}`)
@@ -51,8 +71,8 @@ export const getSupplierMessagesFromImap = (connection: Imap, senderEmail: strin
       })
 
       fetch.once('end', () => {
-        console.log(`Done fetching all messages from ${name} since ${lastRunDate}`)
-        return sources
+        console.log(`Done fetching all messages from ${name} since ${searchDate}`)
+        fulfill()
       })
     })
   })
@@ -97,7 +117,6 @@ export function writeEmailFile (stream: Source, currentRunDirectory: string) : P
             let downloadLink = found.getAttribute('href')
             await downloadFileAndUnzip(downloadLink!, currentRunDirectory)
           }
-
 
         })
 
