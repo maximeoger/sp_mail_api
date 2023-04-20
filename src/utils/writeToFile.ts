@@ -5,6 +5,7 @@ export default async function writeToFile(data: string, filePath: string) : Prom
   const fileHandle = await fs.open(filePath, 'w')
   const writable = fileHandle.createWriteStream()
   const readable = new ReadableString(data, { highWaterMark: 8 * 1024 })
+
   readable.setEncoding('utf-8')
 
   readable.on('data', (chunk) => {
