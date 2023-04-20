@@ -31,7 +31,6 @@ export const getSupplierMessagesFromImap = (connection: Imap, senderEmail: strin
 
   let searchDate = lastRunDate.format('MMM D, YYYY')
 
-  let headerBody = 'HEADER.FIELDS (SUBJECT)'
   let textBody = 'TEXT'
 
   return new Promise((fulfill, reject) => {
@@ -42,18 +41,14 @@ export const getSupplierMessagesFromImap = (connection: Imap, senderEmail: strin
 
       if(err) throw err
 
-      const fetch : ImapFetch = connection.seq.fetch(results, { bodies: [headerBody, textBody], struct: true })
+      const fetch : ImapFetch = connection.seq.fetch(results, { bodies: [textBody], struct: true })
 
       fetch.on('message', (message, seqno) => {
         const prefix = '(#' + seqno + ') '
 
         message.on('body', async (stream, info) => {
-          if(info.which === headerBody) {
-            let subject = await streamToString(stream)
-          }
-
           if(info.which === textBody) {
-            await writeEmailFile(stream, currentRunDirectory)
+            await writeEmailFile(stream, currentRunDirectory, seqno.toString())
           }
         })
 
@@ -78,7 +73,7 @@ export const getSupplierMessagesFromImap = (connection: Imap, senderEmail: strin
   })
 }
 
-export function writeEmailFile (stream: Source, currentRunDirectory: string) : Promise<void> {
+export function writeEmailFile (stream: Source, currentRunDirectory: string, seqno: string) : Promise<void> {
   return new Promise((fulfill, reject) => {
     simpleParser(stream, async (error, mail) => {
 
@@ -88,8 +83,8 @@ export function writeEmailFile (stream: Source, currentRunDirectory: string) : P
       }
 
       if(mail.text) {
-        await writeToFile(mail.text, currentRunDirectory + '/output.html')
-        let fileHandle = await fs.open(currentRunDirectory + '/output.html', 'r')
+        await writeToFile(mail.text, currentRunDirectory + `/${seqno}.html`)
+        let fileHandle = await fs.open(currentRunDirectory + `/${seqno}.html`, 'r')
         let readable = fileHandle.createReadStream()
         let html = ''
 
@@ -98,7 +93,11 @@ export function writeEmailFile (stream: Source, currentRunDirectory: string) : P
           html += str
         })
 
+        readable.on('error', error => reject(error))
+
         readable.on('end', async () => {
+          fulfill()
+          /*
           let { document } = (new JSDOM(html, {contentType: "text/html"})).window
           let aTags = document.getElementsByTagName('a')
           let searchText = "Télécharger"
@@ -117,7 +116,7 @@ export function writeEmailFile (stream: Source, currentRunDirectory: string) : P
             let downloadLink = found.getAttribute('href')
             await downloadFileAndUnzip(downloadLink!, currentRunDirectory)
           }
-
+          */
         })
 
       }
