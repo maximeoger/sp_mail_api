@@ -1,5 +1,7 @@
+import fs from 'node:fs/promises'
 import Supplier, { SupplierData } from '../../utils/suppliers'
 import { getMailbox, getSupplierMessagesFromImap, writeEmailFile } from '../../imap'
+import {JSDOM} from "jsdom";
 
 export default class GW extends Supplier {
 
@@ -37,7 +39,7 @@ export default class GW extends Supplier {
     ]
   }
 
-  private async getProductsFromNewsLetter() : Promise<any> {
+  private async getProductsFromNewsLetter() : Promise<void> {
     await getSupplierMessagesFromImap( // TODO: déplacer ça dans une classe dédiée ?
       this.imapConnection!,
       this.email,
@@ -53,6 +55,58 @@ export default class GW extends Supplier {
     */
   }
 
+  private async retreiveDownloadLinkFromParsedEmail(html: string): Promise<string> {
+    let { document } = (new JSDOM(html, {contentType: "text/html"})).window
+    let aTags = document.getElementsByTagName('a')
+    let searchText = "Télécharger"
+    let found
+
+    for(var i=0; i<aTags.length; i++){
+      if(aTags[i].textContent === searchText) {
+        found = aTags[i]
+        break
+      }
+    }
+
+    if(!found) {
+      throw ('No download link found for supplier.')
+    } else {
+      let downloadLink = found.getAttribute('href')
+      return downloadLink!
+      //await downloadFileAndUnzip(downloadLink!, currentRunDirectory)
+    }
+
+  }
+
+  private async downloadProductsFromEmail(mailId: string) : Promise<void> {
+    // cree un dossier mailId
+    let currentPath = this.currentRunDirectory
+    let newPath = `${currentPath}/${mailId}`
+    await fs.mkdir(newPath)
+
+    // place le mail dedans
+    await fs.rename(`${currentPath}/${mailId}.html`, `${newPath}/mail.html`)
+
+    // recherche la presence du link de download
+    let html = ''
+    let fileHandle = await fs.open(`${newPath}/mail.html`, 'r')
+    let readable = fileHandle.createReadStream()
+
+    readable.on('data', (buffer) => {
+      let str = buffer.toString('utf8')
+      html += str
+    })
+
+    readable.on('error', error => console.log(error))
+
+    readable.on('end', async () => {
+      let downloadLink = await this.retreiveDownloadLinkFromParsedEmail(html)
+    })
+
+    // telecharge les produits dedans
+    return new Promise(() => {})
+  }
+
   async run() : Promise<void> {
     await this.getLastRunDateFromFile()
     this.setCurrentRunDate()
@@ -61,8 +115,8 @@ export default class GW extends Supplier {
     try {
       await this.createDestFile()
       const mailBox = await getMailbox(this.imapConnection!) // TODO: déplacer ça dans une classe dédiée ?
-      const messages = await this.getProductsFromNewsLetter()
-
+      //await this.getProductsFromNewsLetter()
+      await this.downloadProductsFromEmail("2457")
     } catch (error) {
       console.log(error)
     }
