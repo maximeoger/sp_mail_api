@@ -1,6 +1,7 @@
 import request from 'superagent'
 import fs from 'node:fs/promises'
 import admZip from 'adm-zip'
+import {ReadStream} from "fs";
 
 async function unZip (fileDirectory: string, fileName: string) {
   const zip = new admZip(`${fileDirectory}/${fileName}`)

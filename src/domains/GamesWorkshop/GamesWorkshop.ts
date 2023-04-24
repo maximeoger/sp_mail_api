@@ -47,12 +47,6 @@ export default class GW extends Supplier {
       this.name,
       this.currentRunDirectory!
     )
-    /*
-    for await (const source of messagesSources) {
-      const src = source
-      await writeEmailFile(src, this.currentRunDirectory!) // TODO: déplacer ça dans une classe dédiée ?
-    }
-    */
   }
 
   private async retreiveDownloadLinkFromParsedEmail(html: string): Promise<string> {
@@ -82,6 +76,7 @@ export default class GW extends Supplier {
     // cree un dossier mailId
     let currentPath = this.currentRunDirectory
     let newPath = `${currentPath}/${mailId}`
+
     await fs.mkdir(newPath)
 
     // place le mail dedans
@@ -112,14 +107,10 @@ export default class GW extends Supplier {
     this.setCurrentRunDate()
     //await this.saveRunDate()
 
-    try {
-      await this.createDestFile()
-      const mailBox = await getMailbox(this.imapConnection!) // TODO: déplacer ça dans une classe dédiée ?
-      //await this.getProductsFromNewsLetter()
-      await this.downloadProductsFromEmail("2457")
-    } catch (error) {
-      console.log(error)
-    }
+    await this.createDestFile()
+    await getMailbox(this.imapConnection!) // TODO: déplacer ça dans une classe dédiée ?
+    await this.getProductsFromNewsLetter()
+    await this.downloadProductsFromEmail("2457")
 
   }
 }

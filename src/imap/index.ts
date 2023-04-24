@@ -8,6 +8,7 @@ import {Buffer} from "buffer"
 import writeToFile from "../utils/writeToFile"
 import { downloadFileAndUnzip } from "../utils/utils"
 import { streamToString } from "../utils/streams/streamToString"
+import findHTMLAttributeValueFromReadable from "../utils/streams/fintHTMLAttributeFromReadable";
 
 const imapReader = (config: Config) : Connection => {
   const imap = new Imap(config)
@@ -57,6 +58,8 @@ export const getSupplierMessagesFromImap = (connection: Imap, senderEmail: strin
         })
 
         message.once('end', () => console.log(`${prefix} Finished`))
+
+        message.once('error', (error) => reject(error))
       })
 
 
@@ -86,37 +89,11 @@ export function writeEmailFile (stream: Source, currentRunDirectory: string, seq
         await writeToFile(mail.text, currentRunDirectory + `/${seqno}.html`)
         let fileHandle = await fs.open(currentRunDirectory + `/${seqno}.html`, 'r')
         let readable = fileHandle.createReadStream()
-        let html = ''
 
-        readable.on('data', (buffer) => {
-          let str = buffer.toString('utf8')
-          html += str
-        })
-
-        readable.on('error', error => reject(error))
-
-        readable.on('end', async () => {
-          fulfill()
-          /*
-          let { document } = (new JSDOM(html, {contentType: "text/html"})).window
-          let aTags = document.getElementsByTagName('a')
-          let searchText = "Télécharger"
-          let found
-
-          for(var i=0; i<aTags.length; i++){
-            if(aTags[i].textContent === searchText) {
-              found = aTags[i]
-              break
-            }
-          }
-
-          if(!found) {
-            reject('No download link found for supplier.')
-          } else {
-            let downloadLink = found.getAttribute('href')
-            await downloadFileAndUnzip(downloadLink!, currentRunDirectory)
-          }
-          */
+        const str = await findHTMLAttributeValueFromReadable(readable, {
+          qualifiedName: 'a',
+          attribute: 'href',
+          textContent: 'Télécharger'
         })
 
       }
