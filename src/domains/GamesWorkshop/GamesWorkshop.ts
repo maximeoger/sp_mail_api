@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises'
-import Supplier, { SupplierData } from '../../utils/suppliers'
+import Supplier, { SupplierData } from '../BaseSupplier/Supplier'
 import { getMailbox, getSupplierMessagesFromImap, writeEmailFile } from '../../imap'
 import {JSDOM} from "jsdom";
 
@@ -37,16 +37,6 @@ export default class GW extends Supplier {
       'horus',
       'blood bowl'
     ]
-  }
-
-  private async getProductsFromNewsLetter() : Promise<void> {
-    await getSupplierMessagesFromImap( // TODO: déplacer ça dans une classe dédiée ?
-      this.imapConnection!,
-      this.email,
-      this.lastRunDate,
-      this.name,
-      this.currentRunDirectory!
-    )
   }
 
   private async retreiveDownloadLinkFromParsedEmail(html: string): Promise<string> {
@@ -109,7 +99,13 @@ export default class GW extends Supplier {
 
     await this.createDestFile()
     await getMailbox(this.imapConnection!) // TODO: déplacer ça dans une classe dédiée ?
-    await this.getProductsFromNewsLetter()
+    await getSupplierMessagesFromImap( // TODO: déplacer ça dans une classe dédiée ?
+      this.imapConnection!,
+      this.email,
+      this.lastRunDate,
+      this.name,
+      this.currentRunDirectory!
+    )
     await this.downloadProductsFromEmail("2457")
 
   }

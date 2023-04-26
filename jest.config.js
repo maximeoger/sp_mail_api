@@ -7,7 +7,7 @@ module.exports = {
 		'ts'
 	],
 	testMatch: [
-		'**/__tests__/**/*.test.(ts|js)'
+		'**/**/*.test.(ts|js)'
 	],
 	testEnvironment: 'node'
 }

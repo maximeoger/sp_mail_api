@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
 import Imap from 'imap'
-import imapReader  from '../imap'
+import imapReader  from '../../imap'
 import dayjs, { Dayjs } from "dayjs";
 
 export interface SupplierData {
@@ -74,11 +74,21 @@ export default abstract class Supplier {
 	}
 
 	setImapConnection(): void {
+
+		const env = process.env.NODE_ENV!.toUpperCase()
+
+		const {
+			[`MAILBOX_USER_${env}`] : mailBoxUser,
+			[`MAILBOX_PWD_${env}`] : mailBoxPwd,
+			[`IMAP_HOST_${env}`] : imapHost,
+			[`IMAP_PORT_${env}`] : imapPort
+		} = process.env
+
 		this.imapConnection = imapReader({
-			user: process.env.MAILBOX_USER || "",
-			password: process.env.MAILBOX_PWD || "",
-			host: process.env.IMAP_HOST || "",
-			port: Number(process.env.IMAP_PORT),
+			user: mailBoxUser || "",
+			password: mailBoxPwd || "",
+			host: imapHost || "",
+			port: Number(imapPort),
 			tls: true
 		})
 	}
