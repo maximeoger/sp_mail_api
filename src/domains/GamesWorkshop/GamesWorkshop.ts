@@ -31,7 +31,7 @@ export default class GW extends Supplier {
     }
 
   }
-
+  /*
   private async downloadProductsFromEmail(mailId: string) : Promise<void> {
     // cree un dossier mailId
     let currentPath = this.currentRunDirectory
@@ -61,11 +61,14 @@ export default class GW extends Supplier {
     // telecharge les produits dedans
     return new Promise(() => {})
   }
+  */
 
   async run() : Promise<void> {
+    await this.defineDateForCurrentRun()
+    /*
     await this.getLastRunDateFromFile()
-    this.setCurrentRunDate()
-    //await this.saveRunDate()
+    //this.setCurrentRunDate()
+    await this.saveRunDate()
 
     await this.createDestFile()
     await getMailbox(this.imapConnection!) // TODO: déplacer ça dans une classe dédiée ?
@@ -77,6 +80,6 @@ export default class GW extends Supplier {
       this.currentRunDirectory!
     )
     await this.downloadProductsFromEmail("2457")
-
+    */
   }
 }

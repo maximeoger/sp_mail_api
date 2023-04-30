@@ -7,28 +7,51 @@ export interface SupplierData {
 	name : string
 	email: string
 	dest_file_name: string
-	excluded_keywords?: Array<string>
-	included_keywords?: Array<string>
 }
 
 export default abstract class Supplier {
 	name: string
 	email: string
-	lastRunDate: Dayjs
-	dest_file_name: string
+	date_file_path: string
 	excluded_keywords?: Array<string>
 	included_keywords?: Array<string>
 	imapConnection?: Imap
 	downloadsDirectory: string = `${process.cwd()}/downloads`
-	currentRunDirectory?: string
-	currentRunDate?: Dayjs
+	run_date?: string
 
 	protected constructor(data: SupplierData) {
 		this.name = data.name
 		this.email = data.email
-		this.dest_file_name = data.dest_file_name
-		this.lastRunDate = dayjs()
+		this.date_file_path = `${process.cwd()}/last_runs/${data.dest_file_name}.txt`
 	}
+
+	async readRunDateInFile(path: string) : Promise<string> {
+		let fileHandle = await fs.open(path, 'r')
+		let date = await fileHandle.readFile({ encoding: 'utf-8' })
+		return date
+	}
+
+	async writeRunDateInFile(path: string) : Promise<string> {
+		let fileHandle = await fs.open(path, 'w')
+		let date = dayjs().format('YYYY-MM-DD')
+		await fileHandle.writeFile(date, { encoding: 'utf-8' })
+		return date
+	}
+
+	async defineDateForCurrentRun() : Promise<void> {
+		let path = this.date_file_path
+		let date = ''
+		try {
+			await fs.stat(path)
+			date = await this.readRunDateInFile(path)
+		} catch (error) {
+			date = await this.writeRunDateInFile(path)
+		}
+		this.run_date = dayjs(date).format('YYYY-MM-DD')
+	}
+
+
+	/*
 
 	getCurrentDateFormatted(format: string) : string {
 		if(!this.currentRunDate) throw Error(`There is no current date for supplier ${this.name}`)
@@ -68,6 +91,8 @@ export default abstract class Supplier {
 		this.currentRunDirectory = dirPath
 	}
 
+	 */
+
 	// Initialise le Supplier /!\ ne se lance qu'une fois au début du serveur
 	async init(): Promise<void> {
 		this.setImapConnection()
@@ -93,6 +118,7 @@ export default abstract class Supplier {
 		})
 	}
 
+	/*
 	// méthode générique pour tous les fournisseurs car la nomenclature des dossiers de reception est la meme
 	async getProductsFromDownloads(): Promise<void> {
 		try {
@@ -109,5 +135,7 @@ export default abstract class Supplier {
 		}
 
 	}
+
+	 */
 }
 
