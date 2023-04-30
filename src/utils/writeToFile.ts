@@ -1,10 +1,11 @@
 import fs from "node:fs/promises";
-import ReadableString from "./ReadableString";
+import ReadableString from "./streams/ReadableString";
 
 export default async function writeToFile(data: string, filePath: string) : Promise<void> {
   const fileHandle = await fs.open(filePath, 'w')
   const writable = fileHandle.createWriteStream()
   const readable = new ReadableString(data, { highWaterMark: 8 * 1024 })
+
   readable.setEncoding('utf-8')
 
   readable.on('data', (chunk) => {

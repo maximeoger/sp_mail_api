@@ -1,4 +1,4 @@
-import { removeStyleTag } from "../utils/writeToFile";
+import { removeStyleTag } from "./writeToFile";
 
 
 describe('removeStyleTag', () => {

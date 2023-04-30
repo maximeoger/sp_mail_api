@@ -1,29 +1,31 @@
 import request from 'superagent'
-import dayjs from 'dayjs'
 import fs from 'node:fs/promises'
 import admZip from 'adm-zip'
+import {ReadStream} from "fs";
 
 async function unZip (fileDirectory: string, fileName: string) {
-  const zip = new admZip(`${fileDirectory}/${fileName}.zip`)
-  await zip.extractAllToAsync(`${fileDirectory}/${fileName}`)
+  const zip = new admZip(`${fileDirectory}/${fileName}`)
+  await zip.extractAllToAsync(fileDirectory)
 }
 
 export async function downloadFileAndUnzip (url: string, destFileName: string): Promise<void> {
 
-  const fileDirectory = `${__dirname}/../../downloads/${destFileName}`
-  const fileName = `${dayjs().format('DD-MM-YYYY')}`
-
-  const fileHandle = await fs.open(`${fileDirectory}/${fileName}.zip`, 'w')
+  const path = `${destFileName}/products.zip`
+  const fileHandle = await fs.open(path, 'w')
 
   return new Promise((fulfill, reject) => {
     request
       .get(url)
-      .on('error', (error) => console.warn(error))
+      .on('error', (error) => {
+        console.warn(error)
+        reject(error)
+      })
       .pipe(fileHandle.createWriteStream())
       .on('finish', async () => {
-        console.log(`Download completed. File stored at ${__dirname}/../../${fileName}.zip`)
+        console.log(`Download completed. File stored at ${path}`)
         // Todo: Envoyer le fichier ZIP sur un bucket S3
-        await unZip(fileDirectory, fileName)
+        await unZip(destFileName,`products.zip`)
+        await fs.rm(path)
         fulfill()
       })
   })
