@@ -1,5 +1,16 @@
+import Imap from 'imap'
+import dayjs from 'dayjs'
+
 import Supplier, { SupplierData } from './Supplier'
-import Imap from "imap";
+import exp from "constants";
+
+jest.mock('imap', () => {
+  return jest.fn().mockImplementation(() => {
+    return {
+      connect: () => {}
+    }
+  })
+})
 
 class DummySupplier extends Supplier {
   constructor(d: SupplierData) {
@@ -15,11 +26,19 @@ describe('Base Supplier entity', () => {
     dest_file_name: 'dummy',
   })
 
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('Should instantiate with dayjs object as lastRunDate', () => {
+    baseSupplier.init()
+    expect(baseSupplier.lastRunDate).toBeInstanceOf(dayjs)
+  })
+
   it('Should have set imap connection after initialization', () => {
     baseSupplier.init()
-    const imap = baseSupplier.imapConnection
-    let spy = jest.spyOn(imap, 'connect').mockImplementation()
-
-    expect(imap).toBeInstanceOf(Imap)
+    expect(Imap).toHaveBeenCalledTimes(1)
   })
+
+
 })
