@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
 import Imap from 'imap'
-import imapReader  from '../../imap'
+import ImapReader  from '../../ImapReader/ImapReader'
 import dayjs, { Dayjs } from "dayjs";
 
 export interface SupplierData {
@@ -26,25 +26,29 @@ export default abstract class Supplier {
 	}
 
 	async readRunDateInFile(path: string) : Promise<string> {
-		let fileHandle = await fs.open(path, 'r')
-		let date = await fileHandle.readFile({ encoding: 'utf-8' })
+		let date = await fs.readFile(path, { encoding: 'utf-8' })
 		return date
 	}
 
 	async writeRunDateInFile(path: string) : Promise<string> {
-		let fileHandle = await fs.open(path, 'w')
 		let date = dayjs().format('YYYY-MM-DD')
-		await fileHandle.writeFile(date, { encoding: 'utf-8' })
+		await fs.writeFile(path, date, { encoding: 'utf-8' })
 		return date
+	}
+
+	async checkIfDateFileExists(path: string): Promise<void> {
+		await fs.stat(path)
 	}
 
 	async defineDateForCurrentRun() : Promise<void> {
 		let path = this.date_file_path
 		let date = ''
 		try {
-			await fs.stat(path)
+			await this.checkIfDateFileExists(path)
+			// file exists
 			date = await this.readRunDateInFile(path)
 		} catch (error) {
+			// file foes not exists
 			date = await this.writeRunDateInFile(path)
 		}
 		this.run_date = dayjs(date).format('YYYY-MM-DD')
@@ -99,23 +103,7 @@ export default abstract class Supplier {
 	}
 
 	setImapConnection(): void {
-
-		const env = process.env.NODE_ENV!.toUpperCase()
-
-		const {
-			[`MAILBOX_USER_${env}`] : mailBoxUser,
-			[`MAILBOX_PWD_${env}`] : mailBoxPwd,
-			[`IMAP_HOST_${env}`] : imapHost,
-			[`IMAP_PORT_${env}`] : imapPort
-		} = process.env
-
-		this.imapConnection = imapReader({
-			user: mailBoxUser || "",
-			password: mailBoxPwd || "",
-			host: imapHost || "",
-			port: Number(imapPort),
-			tls: true
-		})
+		this.imapConnection = new ImapReader().connect()
 	}
 
 	/*

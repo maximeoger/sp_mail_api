@@ -1,9 +1,8 @@
-import Imap from 'imap'
-import dayjs from 'dayjs'
 import fs from 'node:fs/promises'
 import Supplier, { SupplierData } from './Supplier'
-import exp from "constants";
-import {writeEmailFile} from "../../imap";
+import sinon from 'sinon';
+import Mockdate from 'mockdate'
+import ImapReader from '../../ImapReader/ImapReader'
 
 jest.mock('imap', () => {
   return jest.fn().mockImplementation(() => {
@@ -11,12 +10,6 @@ jest.mock('imap', () => {
       connect: () => {}
     }
   })
-})
-
-jest.mock('node:fs/promises', () => {
-  return {
-    open: jest.fn(),
-  }
 })
 
 class DummySupplier extends Supplier {
@@ -33,22 +26,52 @@ describe('Base Supplier entity', () => {
     dest_file_name: 'test_supplier',
   })
 
-  beforeAll(async () => {
-    await fs.open(`${process.cwd()}`)
+  let fakeDate = '2023-05-01'
+
+  beforeAll(() => {
+    Mockdate.set(fakeDate)
   })
 
-  beforeEach(() => {
-    jest.clearAllMocks()
+  afterEach(() => {
+    sinon.restore()
   })
 
   it('Should have set imap connection after initialization', () => {
+    let ImapReaderStub = sinon.createStubInstance(ImapReader)
     baseSupplier.init()
-    expect(Imap).toHaveBeenCalledTimes(1)
+    expect(ImapReaderStub.connect).toHaveBeenCalled()
   })
 
-  it.only('readRunDateInFile Should read date from file', async () => {
-    baseSupplier.readRunDateInFile = jest.fn().mockResolvedValue('2023-04-30')
-    await baseSupplier.readRunDateInFile('path/to/file')
-    expect(fs.open).toHaveBeenCalledWith('path/to/file', 'r')
+  it('readRunDateInFile Should read date from file', async () => {
+    let readFileStub = sinon.stub(fs, 'readFile').resolves(fakeDate)
+    let date = await baseSupplier.readRunDateInFile('path/to/file')
+    expect(readFileStub.called).toBe(true)
+    expect(date).toBe(fakeDate)
+  })
+
+  it('writeRunDateInFile Should write correct date in file', async () => {
+    let writeFileStub = sinon.stub(fs, 'writeFile')
+    let date = await baseSupplier.writeRunDateInFile('path/to/file')
+    expect(writeFileStub.called).toBe(true)
+    expect(writeFileStub.args).toEqual([[ 'path/to/file', fakeDate, { encoding: 'utf-8' }]])
+    expect(date).toEqual(fakeDate)
+  })
+
+  it('defineDateForCurrentRun Should create date file if not exists and set run_date attribute', async () => {
+    let checkFileExistsStub = sinon.stub(baseSupplier, 'checkIfDateFileExists').rejects()
+    let writeFileStub = sinon.stub(baseSupplier, 'writeRunDateInFile').resolves(fakeDate)
+    await baseSupplier.defineDateForCurrentRun()
+    expect(writeFileStub.called).toBe(true)
+    expect(checkFileExistsStub.called).toBe(true)
+    expect(baseSupplier.run_date).toEqual(fakeDate)
+  })
+
+  it('defineDateForCurrentRun Should return date in file if date file exists and set run_date attribute', async () => {
+    let checkFileExistsStub = sinon.stub(baseSupplier, 'checkIfDateFileExists').resolves()
+    let readDateInFileStub = sinon.stub(baseSupplier, 'readRunDateInFile').resolves(fakeDate)
+    await baseSupplier.defineDateForCurrentRun()
+    expect(readDateInFileStub.called).toBe(true)
+    expect(checkFileExistsStub.called).toBe(true)
+    expect(baseSupplier.run_date).toEqual(fakeDate)
   })
 })

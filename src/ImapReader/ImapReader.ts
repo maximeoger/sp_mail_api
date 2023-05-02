@@ -10,6 +10,34 @@ import { downloadFileAndUnzip } from "../utils/utils"
 import { streamToString } from "../utils/streams/streamToString"
 import findHTMLAttributeValueFromReadable from "../utils/streams/fintHTMLAttributeFromReadable";
 
+export default class ImapReader {
+  connection : Imap
+
+  constructor() {
+    const env = process.env.NODE_ENV!.toUpperCase()
+
+    const {
+      [`MAILBOX_USER_${env}`] : mailBoxUser,
+      [`MAILBOX_PWD_${env}`] : mailBoxPwd,
+      [`IMAP_HOST_${env}`] : imapHost,
+      [`IMAP_PORT_${env}`] : imapPort
+    } = process.env
+
+    this.connection = new Imap({
+      user: mailBoxUser || "",
+      password: mailBoxPwd || "",
+      host: imapHost || "",
+      port: Number(imapPort),
+      tls: true
+    })
+  }
+
+  connect() : Imap {
+    this.connection.connect()
+    return this.connection
+  }
+}
+
 const imapReader = (config: Config) : Connection => {
   const imap = new Imap(config)
   imap.connect()
@@ -100,5 +128,3 @@ export function writeEmailFile (stream: Source, currentRunDirectory: string, seq
     })
   })
 }
-
-export default imapReader

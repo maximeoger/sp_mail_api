@@ -2,7 +2,7 @@ import dotenv from 'dotenv'
 import dayjs from 'dayjs'
 import Server from './server'
 import GW from './domains/GamesWorkshop/GamesWorkshop'
-import { getMailbox } from './imap'
+import { getMailbox } from './ImapReader/ImapReader'
 
 dotenv.config()
 

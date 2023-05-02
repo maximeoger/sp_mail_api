@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
 import Supplier, { SupplierData } from '../BaseSupplier/Supplier'
-import { getMailbox, getSupplierMessagesFromImap, writeEmailFile } from '../../imap'
+import { getMailbox, getSupplierMessagesFromImap, writeEmailFile } from '../../ImapReader/ImapReader'
 import {JSDOM} from "jsdom";
 
 export default class GW extends Supplier {
@@ -65,6 +65,7 @@ export default class GW extends Supplier {
 
   async run() : Promise<void> {
     await this.defineDateForCurrentRun()
+    await getMailbox(this.imapConnection!)
     /*
     await this.getLastRunDateFromFile()
     //this.setCurrentRunDate()
