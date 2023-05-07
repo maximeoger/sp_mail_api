@@ -1,10 +1,17 @@
 import dotenv from 'dotenv'
-import dayjs from 'dayjs'
 import Server from './server'
 import GW from './domains/GamesWorkshop/GamesWorkshop'
-import { getMailbox } from './ImapReader/ImapReader'
 
 dotenv.config()
+
+// @ts-ignore
+String.prototype.hexEncode = function(){
+  let result = ""
+  for(let i=0; i<this.length; i++) {
+    result += this.charCodeAt(i).toString(16)
+  }
+  return result
+}
 
 const fetchMail = async function () {
 

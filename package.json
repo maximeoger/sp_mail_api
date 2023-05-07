@@ -20,6 +20,7 @@
     "koa": "^2.14.1",
     "koa-logger": "^3.2.1",
     "koa-router": "^12.0.0",
+    "libqp": "^2.0.1",
     "mailparser": "^3.6.4",
     "superagent": "^8.0.9"
   },
@@ -28,6 +29,7 @@
     "@types/imap": "^0.8.35",
     "@types/jest": "^29.5.0",
     "@types/jsdom": "^21.1.0",
+    "@types/libqp": "^1.1.1",
     "@types/mailparser": "^3.4.0",
     "@types/node": "^18.15.6",
     "@types/sinon": "^10.0.14",

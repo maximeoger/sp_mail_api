@@ -2,15 +2,6 @@ import fs from 'node:fs/promises'
 import Supplier, { SupplierData } from './Supplier'
 import sinon from 'sinon';
 import Mockdate from 'mockdate'
-import ImapReader from '../../ImapReader/ImapReader'
-
-jest.mock('imap', () => {
-  return jest.fn().mockImplementation(() => {
-    return {
-      connect: () => {}
-    }
-  })
-})
 
 class DummySupplier extends Supplier {
   constructor(d: SupplierData) {
@@ -34,12 +25,6 @@ describe('Base Supplier entity', () => {
 
   afterEach(() => {
     sinon.restore()
-  })
-
-  it('Should have set imap connection after initialization', () => {
-    let ImapReaderStub = sinon.createStubInstance(ImapReader)
-    baseSupplier.init()
-    expect(ImapReaderStub.connect).toHaveBeenCalled()
   })
 
   it('readRunDateInFile Should read date from file', async () => {

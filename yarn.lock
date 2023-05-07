@@ -794,6 +794,13 @@
     "@types/koa-compose" "*"
     "@types/node" "*"
 
+"@types/libqp@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@types/libqp/-/libqp-1.1.1.tgz#30df1139d672f66977b6d77eb316db11b829c475"
+  integrity sha512-pdSohjXQ5SxvWAXa+yv1Jrqm3izxfFHDdIybs6vYdtLWIHUxE75ftnSnA8bZQgQE3oP1RFk4kHkclLg7yD9i2A==
+  dependencies:
+    "@types/node" "*"
+
 "@types/mailparser@^3.4.0":
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/@types/mailparser/-/mailparser-3.4.0.tgz#89dae9d5ca68d9f450b9ed51518e89d57092fef9"
@@ -2554,7 +2561,7 @@ libmime@5.2.1:
     libbase64 "1.2.1"
     libqp "2.0.1"
 
-libqp@2.0.1:
+libqp@2.0.1, libqp@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/libqp/-/libqp-2.0.1.tgz#b8fed76cc1ea6c9ceff8888169e4e0de70cd5cf2"
   integrity sha512-Ka0eC5LkF3IPNQHJmYBWljJsw0UvM6j+QdKRbWyCdTmYwvIDE6a7bCm0UkTAL/K+3KXK5qXT/ClcInU01OpdLg==
