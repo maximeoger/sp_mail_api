@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "concurrently -k -n \"Typescript,Node\" -p \"[{name}]\" -c \"blue,green\" \"tsc --watch\" \"nodemon --exec node --inspect dist/index.js\"",
+    "dev": "concurrently -k -n \"Typescript,Node\" -p \"[{name}]\" -c \"blue,green\" \"tsc --watch\" \"nodemon --exec NODE_ENV=development node --inspect dist/index.js\"",
     "build": "tsc",
     "test": "jest"
   },
@@ -20,6 +20,7 @@
     "koa": "^2.14.1",
     "koa-logger": "^3.2.1",
     "koa-router": "^12.0.0",
+    "libqp": "^2.0.1",
     "mailparser": "^3.6.4",
     "superagent": "^8.0.9"
   },
@@ -28,11 +29,15 @@
     "@types/imap": "^0.8.35",
     "@types/jest": "^29.5.0",
     "@types/jsdom": "^21.1.0",
+    "@types/libqp": "^1.1.1",
     "@types/mailparser": "^3.4.0",
     "@types/node": "^18.15.6",
+    "@types/sinon": "^10.0.14",
     "@types/superagent": "^4.1.16",
     "concurrently": "^7.6.0",
+    "mockdate": "^3.0.5",
     "nodemon": "^2.0.21",
+    "sinon": "^15.0.4",
     "ts-jest": "^29.0.5",
     "typescript": "^4.9.5"
   }

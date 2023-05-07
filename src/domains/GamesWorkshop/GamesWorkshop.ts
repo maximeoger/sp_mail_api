@@ -1,6 +1,5 @@
 import fs from 'node:fs/promises'
 import Supplier, { SupplierData } from '../BaseSupplier/Supplier'
-import { getMailbox, getSupplierMessagesFromImap, writeEmailFile } from '../../imap'
 import {JSDOM} from "jsdom";
 
 export default class GW extends Supplier {
@@ -34,7 +33,7 @@ export default class GW extends Supplier {
 
   private async downloadProductsFromEmail(mailId: string) : Promise<void> {
     // cree un dossier mailId
-    let currentPath = this.currentRunDirectory
+    let currentPath = this.getCurrentDirectory()
     let newPath = `${currentPath}/${mailId}`
 
     await fs.mkdir(newPath)
@@ -58,25 +57,33 @@ export default class GW extends Supplier {
       let downloadLink = await this.retreiveDownloadLinkFromParsedEmail(html)
     })
 
-    // telecharge les produits dedans
+    // télécharge les produits dedans
     return new Promise(() => {})
   }
 
   async run() : Promise<void> {
-    await this.getLastRunDateFromFile()
-    this.setCurrentRunDate()
-    //await this.saveRunDate()
+    await this.defineDateForCurrentRun()
+    let { imapReader, email, run_date, name } = this
+    await imapReader?.openMailBox()
+    let currentDirectory = this.getCurrentDirectory()
 
-    await this.createDestFile()
-    await getMailbox(this.imapConnection!) // TODO: déplacer ça dans une classe dédiée ?
-    await getSupplierMessagesFromImap( // TODO: déplacer ça dans une classe dédiée ?
-      this.imapConnection!,
-      this.email,
-      this.lastRunDate,
-      this.name,
-      this.currentRunDirectory!
+    let isNewMessages = await imapReader!.getSupplierMessagesFromImap(
+      email!,
+      run_date!,
+      name!,
+      currentDirectory
     )
-    await this.downloadProductsFromEmail("2457")
 
+    if(isNewMessages) {
+      // continue
+      console.log('Nouveaux messages, création des dossiers')
+    } else {
+      // Return 204 no-content
+      console.log('Pas de nouveau messages')
+    }
+    /*
+    await this.createDestFile()
+    await this.downloadProductsFromEmail("2457")
+    */
   }
 }

@@ -1,35 +1,75 @@
 import fs from 'node:fs/promises'
 import Imap from 'imap'
-import imapReader  from '../../imap'
-import dayjs, { Dayjs } from "dayjs";
+import ImapReader  from '../../ImapReader/ImapReader'
+import dayjs, {Dayjs} from 'dayjs'
 
 export interface SupplierData {
 	name : string
 	email: string
 	dest_file_name: string
-	excluded_keywords?: Array<string>
-	included_keywords?: Array<string>
 }
 
 export default abstract class Supplier {
 	name: string
 	email: string
-	lastRunDate: Dayjs
+	date_file_path: string
+	imapReader?: ImapReader
 	dest_file_name: string
-	excluded_keywords?: Array<string>
-	included_keywords?: Array<string>
-	imapConnection?: Imap
 	downloadsDirectory: string = `${process.cwd()}/downloads`
-	currentRunDirectory?: string
-	currentRunDate?: Dayjs
+	run_date?: Dayjs
 
 	protected constructor(data: SupplierData) {
 		this.name = data.name
 		this.email = data.email
+		this.date_file_path = `${process.cwd()}/last_runs/${data.dest_file_name}.txt`
 		this.dest_file_name = data.dest_file_name
-		this.lastRunDate = dayjs()
 	}
 
+	async init(): Promise<void> {
+		this.setImapConnection()
+	}
+
+	setImapConnection(): void {
+		this.imapReader = new ImapReader()
+		this.imapReader!.connect()
+	}
+
+	getCurrentDirectory (): string {
+		const {downloadsDirectory, dest_file_name} = this
+		return `${downloadsDirectory}/${dest_file_name}`
+	}
+
+	async readRunDateInFile(path: string) : Promise<string> {
+		let date = await fs.readFile(path, { encoding: 'utf-8' })
+		if(date === '') throw Error()
+		return date
+	}
+
+	async writeRunDateInFile(path: string) : Promise<string> {
+		let date = dayjs().format('YYYY-MM-DD')
+		await fs.writeFile(path, date, {encoding: 'utf-8'})
+		return date
+	}
+
+	async checkIfDateFileExists(path: string): Promise<void> {
+		await fs.stat(path)
+	}
+
+	async defineDateForCurrentRun() : Promise<void> {
+		let path = this.date_file_path
+		let date = ''
+		try {
+			await this.checkIfDateFileExists(path)
+			// file exists
+			date = await this.readRunDateInFile(path)
+		} catch (error) {
+			// file foes not exists
+			date = await this.writeRunDateInFile(path)
+		}
+		this.run_date = dayjs(date)
+	}
+
+	/*
 	getCurrentDateFormatted(format: string) : string {
 		if(!this.currentRunDate) throw Error(`There is no current date for supplier ${this.name}`)
 		return this.currentRunDate.format(format)
@@ -68,31 +108,6 @@ export default abstract class Supplier {
 		this.currentRunDirectory = dirPath
 	}
 
-	// Initialise le Supplier /!\ ne se lance qu'une fois au début du serveur
-	async init(): Promise<void> {
-		this.setImapConnection()
-	}
-
-	setImapConnection(): void {
-
-		const env = process.env.NODE_ENV!.toUpperCase()
-
-		const {
-			[`MAILBOX_USER_${env}`] : mailBoxUser,
-			[`MAILBOX_PWD_${env}`] : mailBoxPwd,
-			[`IMAP_HOST_${env}`] : imapHost,
-			[`IMAP_PORT_${env}`] : imapPort
-		} = process.env
-
-		this.imapConnection = imapReader({
-			user: mailBoxUser || "",
-			password: mailBoxPwd || "",
-			host: imapHost || "",
-			port: Number(imapPort),
-			tls: true
-		})
-	}
-
 	// méthode générique pour tous les fournisseurs car la nomenclature des dossiers de reception est la meme
 	async getProductsFromDownloads(): Promise<void> {
 		try {
@@ -109,5 +124,7 @@ export default abstract class Supplier {
 		}
 
 	}
+
+	 */
 }
 
