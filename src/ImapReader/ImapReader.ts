@@ -1,3 +1,5 @@
+"use strict"
+
 import { Dayjs } from "dayjs"
 import Imap, {Box, ImapFetch} from 'imap'
 import { downloadFileAndUnzip } from "../utils/utils"
@@ -44,55 +46,36 @@ export default class ImapReader {
     })
   }
 
-  getSupplierMessagesFromImap(senderEmail: string, lastRunDate: Dayjs, name: string, currentRunDirectory: string) : Promise<boolean> {
+  async getSupplierMessagesFromImap(senderEmail: string, lastRunDate: Dayjs, name: string, currentRunDirectory: string) : Promise<void> {
 
     let connection = this.connection
     let searchDate = lastRunDate.format('MMM D, YYYY')
 
     let textBody = 'TEXT'
 
-    return new Promise((fulfill, reject) => {
-      connection.seq.search([
-        ['FROM', senderEmail],
-        ['SINCE', searchDate],
-      ],  (err, results) => {
+    connection.seq.search([
+      ['FROM', senderEmail],
+      ['SINCE', searchDate],
+    ],  (err, results) => {
 
-        let newMessages = false;
+      const fetch : ImapFetch = connection.seq.fetch(results, { bodies: [textBody], struct: true })
 
-        if(err) throw err
+      fetch.on('message', (message, seqno) => {
 
-        const fetch : ImapFetch = connection.seq.fetch(results, { bodies: [textBody], struct: true })
-
-        fetch.on('message', (message, seqno) => {
-          const prefix = '(#' + seqno + ') '
-
-          message.on('body', async (stream, info) => {
-            newMessages = true;
-            if(info.which === textBody) {
-              let downloadLink = await this.retrieveDownloadLinkFromReadable(stream)
-              await downloadFileAndUnzip(downloadLink, currentRunDirectory)
+        message.on('body', async (stream, info) => {
+          if(info.which === textBody) {
+            let downloadLink = await this.retrieveDownloadLinkFromReadable(stream)
+            if(!downloadLink) {
+              console.log(`Pas de produits trouvés dans le mail #${seqno}`)
+            } else {
+              await downloadFileAndUnzip(downloadLink, seqno, currentRunDirectory)
             }
-          })
-
-          message.on('attributes', (attrs: any) => {
-            console.log(`${prefix} Date : ${attrs.date}`)
-          })
-
-        message.once('end', () => console.log(`${prefix} Finished`))
-
-        message.once('error', (error) => reject(error))
+          }
+        })
       })
 
-
-        fetch.once('error', (error) => {
-          console.log(`Fetch error : ${error}`)
-          reject(error)
-        })
-
-        fetch.once('end', () => {
-          console.log(`Done fetching all messages from ${name} since ${searchDate}`)
-          fulfill(newMessages)
-        })
+      fetch.once('end', () => {
+        console.log(`Successfully fetched ${results.length} messages from ${senderEmail}.`)
       })
     })
   }

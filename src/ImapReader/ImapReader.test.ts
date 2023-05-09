@@ -26,11 +26,10 @@ describe('ImapReader', () => {
     })
   })
 
-  describe('openMailBox', () => {
+  describe('getSupplierMessagesFromImap', () => {
     let imapClient
 
-    it.only('Should reject promise if error', async () => {
-       //let mailBox = await imapReader.openMailBox()
+    it.only('Should return false if there is no messages', async () => {
 
     })
   })
