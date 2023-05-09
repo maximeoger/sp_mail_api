@@ -4,28 +4,34 @@ import admZip from 'adm-zip'
 
 async function unZip (fileDirectory: string, fileName: string) {
   const zip = new admZip(`${fileDirectory}/${fileName}`)
-  await zip.extractAllToAsync(fileDirectory)
+  zip.extractAllToAsync(fileDirectory, true, true, (error) => {
+    // Pas possible de throw
+    console.log(error, fileName)
+  })
+  await fs.rm(`${fileDirectory}/${fileName}`)
 }
 
-export async function downloadFileAndUnzip (url: string, destFileName: string): Promise<void> {
+export async function downloadFileAndUnzip (url: string, seqno: number, destFileName: string): Promise<void> {
 
-  const path = `${destFileName}/products.zip`
-  const fileHandle = await fs.open(path, 'w')
+  const destPath = `${destFileName}/${seqno}`
+  await fs.mkdir(destPath, { recursive: true })
 
-  return new Promise((fulfill, reject) => {
-    request
-      .get(url)
-      .on('error', (error) => {
-        console.warn(error)
-        reject(error)
-      })
-      .pipe(fileHandle.createWriteStream())
-      .on('finish', async () => {
-        console.log(`Download completed. File stored at ${path}`)
-        // Todo: Envoyer le fichier ZIP sur un bucket S3
-        await unZip(destFileName,`products.zip`)
-        await fs.rm(path)
-        fulfill()
-      })
-  })
+  const fileHandle = await fs.open(`${destPath}/products.zip`, 'w')
+
+  await request
+    .get(url)
+    .on('error', (error) => {
+      console.warn(error)
+      throw error
+    })
+    .pipe(fileHandle.createWriteStream())
+    .on('finish', async () => {
+      console.log(`Download completed. File stored at ${destPath}/products.zip`)
+      // Todo: Envoyer le fichier ZIP sur un bucket S3
+      try {
+        await unZip(destPath,`products.zip`)
+      } catch(error) {
+        console.error(`Error unziping file ${seqno}`)
+      }
+    })
 }
