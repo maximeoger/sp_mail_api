@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "concurrently -k -n \"Typescript,Node\" -p \"[{name}]\" -c \"blue,green\" \"tsc --watch\" \"nodemon --exec NODE_ENV=development node --inspect dist/index.js\"",
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "start": "NODE_ENV=development node dist/index.js"
   },
   "dependencies": {
     "@koa/cors": "^4.0.0",
