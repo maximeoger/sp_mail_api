@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises'
-import Imap from 'imap'
 import ImapReader  from '../../ImapReader/ImapReader'
 import dayjs, {Dayjs} from 'dayjs'
 
@@ -68,63 +67,5 @@ export default abstract class Supplier {
 		}
 		this.run_date = dayjs(date)
 	}
-
-	/*
-	getCurrentDateFormatted(format: string) : string {
-		if(!this.currentRunDate) throw Error(`There is no current date for supplier ${this.name}`)
-		return this.currentRunDate.format(format)
-	}
-
-	getLastRunDateFormatted(format: string) : string {
-		if(!this.lastRunDate) throw Error(`There is no last run date for supplier ${this.name}`)
-		return this.lastRunDate.format(format)
-	}
-
-	async getLastRunDateFromFile(): Promise<void> {
-		let lastRunDate = await fs.readFile(`${process.cwd()}/last_runs/${this.dest_file_name}.txt`, { encoding: 'utf8' })
-		this.lastRunDate = dayjs(lastRunDate)
-	}
-
-	setCurrentRunDate(): void {
-		this.currentRunDate = dayjs()
-	}
-
-	async saveRunDate(): Promise<void> {
-		await fs.writeFile(`${process.cwd()}/last_runs/${this.dest_file_name}.txt`, this.getCurrentDateFormatted('YYYY-MM-DD'))
-	}
-
-	// Lancé à chaque run : créé un dossier à la date du run au format DD-MM-YYYY
-	async createDestFile(): Promise<void> {
-		const canRun = this.downloadsDirectory && this.dest_file_name && this.currentRunDate
-
-		if(!canRun) {
-			throw Error('Missing download directory, destination file name of current run date.')
-		}
-
-		let dirPath = `${this.downloadsDirectory}/${this.dest_file_name}/${this.getCurrentDateFormatted('YYYY-MM-DD')}`
-
-		await fs.mkdir(dirPath, { recursive: true })
-
-		this.currentRunDirectory = dirPath
-	}
-
-	// méthode générique pour tous les fournisseurs car la nomenclature des dossiers de reception est la meme
-	async getProductsFromDownloads(): Promise<void> {
-		try {
-			const productsFromNewsLetter : Array<any> = await fs.readdir(`${this.downloadsDirectory}/${this.dest_file_name}`)
-
-			const output = productsFromNewsLetter.map((file, i) => {
-				return file
-			})
-			console.log(output)
-
-		} catch (err) {
-			console.log(err)
-			throw Error('erreur :(')
-		}
-
-	}
-
-	 */
 }
 
