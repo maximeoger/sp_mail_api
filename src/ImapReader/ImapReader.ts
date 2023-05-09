@@ -44,57 +44,43 @@ export default class ImapReader {
     })
   }
 
-  getSupplierMessagesFromImap(senderEmail: string, lastRunDate: Dayjs, name: string, currentRunDirectory: string) : Promise<boolean> {
+  async getSupplierMessagesFromImap(senderEmail: string, lastRunDate: Dayjs, name: string, currentRunDirectory: string) : Promise<boolean> {
 
     let connection = this.connection
     let searchDate = lastRunDate.format('MMM D, YYYY')
 
     let textBody = 'TEXT'
+    let newProducts = false;
 
-    return new Promise((fulfill, reject) => {
-      connection.seq.search([
-        ['FROM', senderEmail],
-        ['SINCE', searchDate],
-      ],  (err, results) => {
+    connection.seq.search([
+      ['FROM', senderEmail],
+      ['SINCE', searchDate],
+    ],  (err, results) => {
 
-        let newMessages = false;
+      const fetch : ImapFetch = connection.seq.fetch(results, { bodies: [textBody], struct: true })
 
-        if(err) throw err
-
-        const fetch : ImapFetch = connection.seq.fetch(results, { bodies: [textBody], struct: true })
-
-        fetch.on('message', (message, seqno) => {
-          const prefix = '(#' + seqno + ') '
-
-          message.on('body', async (stream, info) => {
-            newMessages = true;
-            if(info.which === textBody) {
-              let downloadLink = await this.retrieveDownloadLinkFromReadable(stream)
-              await downloadFileAndUnzip(downloadLink, currentRunDirectory)
+      fetch.on('message', (message, seqno) => {
+        message.on('body', async (stream, info) => {
+          newProducts = true;
+          if(info.which === textBody) {
+            let downloadLink = await this.retrieveDownloadLinkFromReadable(stream)
+            if(!downloadLink) {
+              console.log(`Pas de produits trouvés dans le mail #${seqno}`)
             }
-          })
-
-          message.on('attributes', (attrs: any) => {
-            console.log(`${prefix} Date : ${attrs.date}`)
-          })
-
-        message.once('end', () => console.log(`${prefix} Finished`))
-
-        message.once('error', (error) => reject(error))
+            await downloadFileAndUnzip(downloadLink, seqno, currentRunDirectory)
+            // New products.
+            newProducts = true
+          }
+        })
       })
 
-
-        fetch.once('error', (error) => {
-          console.log(`Fetch error : ${error}`)
-          reject(error)
-        })
-
-        fetch.once('end', () => {
-          console.log(`Done fetching all messages from ${name} since ${searchDate}`)
-          fulfill(newMessages)
-        })
+      fetch.once('error', (error) => {
+        throw error
       })
     })
+
+    // True or False
+    return newProducts
   }
 
   async retrieveDownloadLinkFromReadable(stream: Stream) : Promise<string> {
