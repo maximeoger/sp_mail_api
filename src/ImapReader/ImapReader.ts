@@ -1,3 +1,5 @@
+"use strict"
+
 import { Dayjs } from "dayjs"
 import Imap, {Box, ImapFetch} from 'imap'
 import { downloadFileAndUnzip } from "../utils/utils"
@@ -44,13 +46,12 @@ export default class ImapReader {
     })
   }
 
-  async getSupplierMessagesFromImap(senderEmail: string, lastRunDate: Dayjs, name: string, currentRunDirectory: string) : Promise<boolean> {
+  async getSupplierMessagesFromImap(senderEmail: string, lastRunDate: Dayjs, name: string, currentRunDirectory: string) : Promise<void> {
 
     let connection = this.connection
     let searchDate = lastRunDate.format('MMM D, YYYY')
 
     let textBody = 'TEXT'
-    let newProducts = false;
 
     connection.seq.search([
       ['FROM', senderEmail],
@@ -60,27 +61,23 @@ export default class ImapReader {
       const fetch : ImapFetch = connection.seq.fetch(results, { bodies: [textBody], struct: true })
 
       fetch.on('message', (message, seqno) => {
+
         message.on('body', async (stream, info) => {
-          newProducts = true;
           if(info.which === textBody) {
             let downloadLink = await this.retrieveDownloadLinkFromReadable(stream)
             if(!downloadLink) {
               console.log(`Pas de produits trouvés dans le mail #${seqno}`)
+            } else {
+              await downloadFileAndUnzip(downloadLink, seqno, currentRunDirectory)
             }
-            await downloadFileAndUnzip(downloadLink, seqno, currentRunDirectory)
-            // New products.
-            newProducts = true
           }
         })
       })
 
-      fetch.once('error', (error) => {
-        throw error
+      fetch.once('end', () => {
+        console.log(`Successfully fetched ${results.length} messages from ${senderEmail}.`)
       })
     })
-
-    // True or False
-    return newProducts
   }
 
   async retrieveDownloadLinkFromReadable(stream: Stream) : Promise<string> {

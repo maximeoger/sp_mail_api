@@ -12,19 +12,11 @@ export default class GW extends Supplier {
     await imapReader?.openMailBox()
     let currentDirectory = this.getCurrentDirectory()
 
-    let isNewProducts = await imapReader!.getSupplierMessagesFromImap(
+    await imapReader!.getSupplierMessagesFromImap(
       email!,
       run_date!,
       name!,
       currentDirectory
     )
-
-    if(isNewProducts) {
-      // continue
-      console.log('Response 200 : Ok')
-    } else {
-      // Return 204 no-content
-      console.log('Response 204 : No-Content')
-    }
   }
 }

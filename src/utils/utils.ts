@@ -4,10 +4,7 @@ import admZip from 'adm-zip'
 
 async function unZip (fileDirectory: string, fileName: string) {
   const zip = new admZip(`${fileDirectory}/${fileName}`)
-  zip.extractAllToAsync(fileDirectory, true, true, (error) => {
-    // Pas possible de throw
-    console.log(error, fileName)
-  })
+  zip.extractAllToAsync(fileDirectory, true, true, (error) => {})
   await fs.rm(`${fileDirectory}/${fileName}`)
 }
 
