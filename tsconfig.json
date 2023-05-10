@@ -3,12 +3,22 @@
     "module": "commonjs",
     "esModuleInterop": true,
     "outDir": "dist",
-    "target": "es6",
+    "target": "es2017",
     "strict": true,
     "sourceMap": true,
-    "sourceRoot": "src"
-  },
-  "include": [
-    "src/**/*"
-  ]
+    "sourceRoot": "src",
+    "declaration": true,
+    "removeComments": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false
+  }
 }

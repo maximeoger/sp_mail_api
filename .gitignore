@@ -1,8 +1,31 @@
+# Compiled outputs
 dist
 node_modules
+
+# env
 .env
-.idea
+
+# os
 .DS_Store
 
+# IDEs
+.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Supplier run outputs
 **/*/output.html
 downloads/**
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
