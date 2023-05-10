@@ -5,7 +5,6 @@ import GW from './domains/GamesWorkshop/GamesWorkshop'
 dotenv.config()
 
 const fetchMail = async function () {
-
   const gamesWorkshop = new GW({
     name: 'Games Workshop',
     dest_file_name: 'games_workshop',
@@ -16,7 +15,7 @@ const fetchMail = async function () {
 
   try {
     await gamesWorkshop.run()
-  } catch(err) {
+  } catch (err) {
     console.log(err)
   }
 }

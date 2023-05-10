@@ -1,19 +1,15 @@
 import GamesWorkshop from './GamesWorkshop'
 import fs from 'node:fs/promises'
-import dayjs, { Dayjs } from "dayjs";
-
+import dayjs, { Dayjs } from 'dayjs'
 
 describe('GamesWorkshop entity', () => {
-
   let gw = new GamesWorkshop({
     name: 'Games Workshop',
     dest_file_name: 'games_workshop',
-    email: 'info@info.games-workshop.com'
+    email: 'info@info.games-workshop.com',
   })
 
-  beforeAll(async () => {
-
-  })
+  beforeAll(async () => {})
 
   it('should init with correct data', () => {
     expect(gw.name).toEqual('Games Workshop')

@@ -1,4 +1,4 @@
-import {Readable, ReadableOptions} from 'stream'
+import { Readable, ReadableOptions } from 'stream'
 
 export default class ReadableString extends Readable {
   str: string = ''

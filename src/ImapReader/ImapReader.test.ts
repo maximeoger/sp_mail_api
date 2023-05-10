@@ -12,26 +12,20 @@ let mockImap = {
 
 jest.mock('imap', () => {
   return jest.fn().mockImplementation(() => {
-    return {
-
-    }
+    return {}
   })
 })
 
 describe('ImapReader', () => {
-
   describe('connect', () => {
     it('Should create and store imap connection in class attribute', () => {
-     // imapReader.connect()
+      // imapReader.connect()
     })
   })
 
   describe('getSupplierMessagesFromImap', () => {
     let imapClient
 
-    it.only('Should return false if there is no messages', async () => {
-
-    })
+    it.only('Should return false if there is no messages', async () => {})
   })
-
 })

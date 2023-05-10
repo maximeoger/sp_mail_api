@@ -1,14 +1,14 @@
-const fs : any = jest.genMockFromModule('node:fs/promises')
+const fs: any = jest.genMockFromModule('node:fs/promises')
 const path = require('path')
 
 let mockFiles = Object.create(null)
 
-function __createMockFiles(newMockFiles : any) {
+function __createMockFiles(newMockFiles: any) {
   mockFiles = Object.create(null)
 
   for (const file in newMockFiles) {
     const dir = path.dirname(file)
-    if(!mockFiles[dir]) {
+    if (!mockFiles[dir]) {
       mockFiles[dir] = []
     }
 

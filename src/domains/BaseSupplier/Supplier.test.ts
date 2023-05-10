@@ -1,16 +1,15 @@
 import fs from 'node:fs/promises'
 import Supplier, { SupplierData } from './Supplier'
-import sinon from 'sinon';
+import sinon from 'sinon'
 import Mockdate from 'mockdate'
 
 class DummySupplier extends Supplier {
   constructor(d: SupplierData) {
-    super(d);
+    super(d)
   }
 }
 
 describe('Base Supplier entity', () => {
-
   let baseSupplier = new DummySupplier({
     name: 'dummy',
     email: 'dummy@email.com',
@@ -38,13 +37,19 @@ describe('Base Supplier entity', () => {
     let writeFileStub = sinon.stub(fs, 'writeFile')
     let date = await baseSupplier.writeRunDateInFile('path/to/file')
     expect(writeFileStub.called).toBe(true)
-    expect(writeFileStub.args).toEqual([[ 'path/to/file', fakeDate, { encoding: 'utf-8' }]])
+    expect(writeFileStub.args).toEqual([
+      ['path/to/file', fakeDate, { encoding: 'utf-8' }],
+    ])
     expect(date).toEqual(fakeDate)
   })
 
   it('defineDateForCurrentRun Should create date file if not exists and set run_date attribute', async () => {
-    let checkFileExistsStub = sinon.stub(baseSupplier, 'checkIfDateFileExists').rejects()
-    let writeFileStub = sinon.stub(baseSupplier, 'writeRunDateInFile').resolves(fakeDate)
+    let checkFileExistsStub = sinon
+      .stub(baseSupplier, 'checkIfDateFileExists')
+      .rejects()
+    let writeFileStub = sinon
+      .stub(baseSupplier, 'writeRunDateInFile')
+      .resolves(fakeDate)
     await baseSupplier.defineDateForCurrentRun()
     expect(writeFileStub.called).toBe(true)
     expect(checkFileExistsStub.called).toBe(true)
@@ -52,8 +57,12 @@ describe('Base Supplier entity', () => {
   })
 
   it('defineDateForCurrentRun Should return date in file if date file exists and set run_date attribute', async () => {
-    let checkFileExistsStub = sinon.stub(baseSupplier, 'checkIfDateFileExists').resolves()
-    let readDateInFileStub = sinon.stub(baseSupplier, 'readRunDateInFile').resolves(fakeDate)
+    let checkFileExistsStub = sinon
+      .stub(baseSupplier, 'checkIfDateFileExists')
+      .resolves()
+    let readDateInFileStub = sinon
+      .stub(baseSupplier, 'readRunDateInFile')
+      .resolves(fakeDate)
     await baseSupplier.defineDateForCurrentRun()
     expect(readDateInFileStub.called).toBe(true)
     expect(checkFileExistsStub.called).toBe(true)

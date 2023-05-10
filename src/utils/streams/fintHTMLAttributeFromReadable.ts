@@ -1,35 +1,39 @@
-import {JSDOM} from 'jsdom'
-import {Stream} from 'stream'
+import { JSDOM } from 'jsdom'
+import { Stream } from 'stream'
 import libqp from 'libqp'
 
-type SearchQuery = {
-  qualifiedName: string;
-  attribute: string;
-  textContent: string;
+export type SearchQuery = {
+  qualifiedName: string
+  attribute: string
+  textContent: string
 }
 
-async function findHTMLAttributeValueFromReadable (readable: Stream, what: SearchQuery) : Promise<string> {
+async function findHTMLAttributeValueFromReadable(
+  readable: Stream,
+  what: SearchQuery,
+): Promise<string> {
   return new Promise((fulfill, reject) => {
-
     readable.on('data', (buffer) => {
-
       // decoder les caractères "quoted printable"
-      let _buff = libqp.decode(buffer)
+      const _buff = libqp.decode(buffer)
       // convertir le résultat en utf8
-      let data = _buff.toString('utf-8')
+      const data = _buff.toString('utf-8')
 
-      let { window } = new JSDOM(data, {
+      const { window } = new JSDOM(data, {
         contentType: 'text/html',
       })
 
-      let links = Array.from(window.document.querySelectorAll(what.qualifiedName))
-      let found = links.find((el : any) => {
+      const links = Array.from(
+        window.document.querySelectorAll(what.qualifiedName),
+      )
+      const _links = links.map((el) => el.textContent)
+      const found = links.find((el: any) => {
         return el.textContent === what.textContent
       })
 
-      if(found) {
-        let attributeValue = found.getAttribute(what.attribute)
-        if(attributeValue) {
+      if (found) {
+        const attributeValue = found.getAttribute(what.attribute)
+        if (attributeValue) {
           fulfill(attributeValue)
         } else {
           reject(Error(`No attribute value for ${what.qualifiedName}`))
@@ -38,7 +42,6 @@ async function findHTMLAttributeValueFromReadable (readable: Stream, what: Searc
     })
 
     readable.on('error', (error) => reject(error))
-
   })
 }
 
