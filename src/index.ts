@@ -1,10 +1,7 @@
 import dotenv from 'dotenv'
-import Server from './server'
-import GW from './domains/GamesWorkshop/GamesWorkshop'
-
-dotenv.config()
-
-const fetchMail = async function () {
+import GW from './domains/suppliers/GamesWorkshop/GamesWorkshop'
+;(async function () {
+  dotenv.config()
   const gamesWorkshop = new GW({
     name: 'Games Workshop',
     dest_file_name: 'games_workshop',
@@ -18,10 +15,4 @@ const fetchMail = async function () {
   } catch (err) {
     console.log(err)
   }
-}
-
-fetchMail()
-
-const app = new Server(3002)
-
-app.start()
+})()

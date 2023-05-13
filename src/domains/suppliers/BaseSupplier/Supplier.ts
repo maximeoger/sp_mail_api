@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises'
-import ImapReader from '../../ImapReader/ImapReader'
+import ImapReader from '../../../ImapReader/ImapReader'
 import dayjs, { Dayjs } from 'dayjs'
 
 export interface SupplierData {

@@ -1,6 +1,7 @@
 import request from 'superagent'
 import fs from 'node:fs/promises'
 import admZip from 'adm-zip'
+import https from 'https'
 
 async function unZip(fileDirectory: string, fileName: string) {
   const zip = new admZip(`${fileDirectory}/${fileName}`)
@@ -8,47 +9,29 @@ async function unZip(fileDirectory: string, fileName: string) {
   await fs.rm(`${fileDirectory}/${fileName}`)
 }
 
-export async function downloadFileAndUnzip(
-  url: string,
-  seqno: number,
-  destFileName: string,
-): Promise<void> {
-  const destPath = `${destFileName}/${seqno}`
-  await fs.mkdir(destPath, { recursive: true })
-
-  const fileHandle = await fs.open(`${destPath}/products.zip`, 'w')
-
-  await request
-    .get(url)
-    .on('error', (error) => {
-      console.warn(error)
-      throw error
-    })
-    .pipe(fileHandle.createWriteStream())
-    .on('finish', async () => {
-      console.log(`Download completed. File stored at ${destPath}/products.zip`)
-      // Todo: Envoyer le fichier ZIP sur un bucket S3
-      try {
-        await unZip(destPath, `products.zip`)
-      } catch (error) {
-        console.error(`Error unziping file ${seqno}`)
-      }
-    })
+function waitForEvent<T>(emitter, event): Promise<T> {
+  return new Promise((resolve, reject) => {
+    emitter.once(event, resolve)
+    emitter.once('error', reject)
+  })
 }
 
-export async function downloadFile(url: string, seqno: number, destFileName: string): Promise<void> {
-  const destPath = `${destFileName}/${seqno}`
+const MIMES_TYPES = {
+  'application/zip': '.zip',
+  'application/xls': '.xls',
+  'application/vnd.ms-excel': '.xls',
+}
 
-  const fileHandle = await fs.open(`${destPath}/pricelist.xls`, 'w')
+export async function download(url: string, path: string) {
 
-  await request
+  await fs.mkdir(path, { recursive: true })
+
+  // from this point, I do not know the MIME type of the response
+  const fh = await fs.open(`${path}/file.zip`, 'w')
+
+  request
     .get(url)
-    .on('error', (error) => {
-      console.warn(error)
-      throw error
-    })
-    .pipe(fileHandle.createWriteStream())
-    .on('finish', async () => {
-      console.log(`Download completed. File stored at ${destPath}/pricelist.xls`)
-    })
+    .pipe(fh.createWriteStream())
+    .on('error', (error) => console.log(error))
+    .on('finish', () => console.log('Download completed'))
 }

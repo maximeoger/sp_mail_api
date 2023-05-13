@@ -1,10 +1,14 @@
 import { Dayjs } from 'dayjs'
 import Imap, { Box, ImapFetch } from 'imap'
-import {downloadFile, downloadFileAndUnzip} from '../utils/utils'
-import { Stream } from 'stream'
-import findHTMLAttributeValueFromReadable, {
-  SearchQuery,
-} from '../utils/streams/fintHTMLAttributeFromReadable'
+import { download } from '../utils/utils'
+import libqp from 'libqp'
+import { JSDOM } from 'jsdom'
+
+export type SearchQuery = {
+  qualifiedName: string
+  attribute: string
+  textContent: string
+}
 
 export default class ImapReader {
   connection: Imap
@@ -71,37 +75,49 @@ export default class ImapReader {
         fetch.on('message', (message, seqno) => {
           message.on('body', async (stream, info) => {
             if (info.which === textBody) {
-              const imagesDownloadLink = null
-              /*
-              const imagesDownloadLink =
-                await this.retrieveDownloadLinkFromReadable(stream, {
-                  qualifiedName: 'a',
-                  attribute: 'href',
-                  textContent: 'Télécharger',
-                })
-  */
-              const priceListDownloadLink =
-                await this.retrieveDownloadLinkFromReadable(stream, {
-                  qualifiedName: 'a',
-                  attribute: 'href',
-                  textContent: 'Liste des prix',
+              let buffer = ''
+
+              stream.on('data', (chunk) => (buffer += chunk.toString('utf8')))
+
+              stream.once('end', async () => {
+                const founds: Array<string> = []
+                const queries: Array<SearchQuery> = [
+                  {
+                    qualifiedName: 'a',
+                    attribute: 'href',
+                    textContent: 'Télécharger',
+                  },
+                  {
+                    qualifiedName: 'a',
+                    attribute: 'href',
+                    textContent: 'Liste des prix',
+                  },
+                ]
+                // decoder les caractères "quoted printable"
+                const _buff = libqp.decode(buffer)
+                // convertir le résultat en utf8
+                const data = _buff.toString('utf-8')
+
+                const { window } = new JSDOM(data, {
+                  contentType: 'text/html',
                 })
 
-              if (!imagesDownloadLink) {
-                console.log(`Pas d'images de produits trouvés dans le mail #${seqno}`)
-              } else {
-                await downloadFileAndUnzip(
-                  imagesDownloadLink,
-                  seqno,
-                  currentRunDirectory,
-                )
-              }
-
-              if (!priceListDownloadLink) {
-                console.log(`Pas de lien vers un fichier pricelist.xls da,s me ùail ${seqno}`)
-              } else {
-                await downloadFile(priceListDownloadLink, seqno, currentRunDirectory)
-              }
+                for (const what of queries) {
+                  const links = Array.from(
+                    window.document.querySelectorAll(what.qualifiedName),
+                  )
+                  const found = links.find((el: any) => {
+                    return el.textContent === what.textContent
+                  })
+                  if (found) {
+                    const url = found.getAttribute(what.attribute)
+                    if (url) {
+                      const path = `${currentRunDirectory}/${seqno}`
+                      await download(url, path)
+                    }
+                  }
+                }
+              })
             }
           })
         })
@@ -113,21 +129,5 @@ export default class ImapReader {
         })
       },
     )
-  }
-
-  async retrieveDownloadLinkFromReadable(
-    stream: Stream,
-    searchQuery: SearchQuery,
-  ): Promise<string> {
-    const downloadLink = await findHTMLAttributeValueFromReadable(
-      stream,
-      searchQuery,
-    )
-
-    if (!downloadLink) {
-      throw new Error('No Download link found')
-    }
-
-    return downloadLink
   }
 }
